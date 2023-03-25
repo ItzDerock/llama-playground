@@ -1,0 +1,16 @@
+version: '3'
+
+services:
+  app:
+    image: ghcr.io/itzderock/llama-playground:latest
+    ports:
+      - 3000:3000
+      - 3001:3001
+    environment:
+      - USE_BUILT_IN_LLAMA_SERVER=true
+      - LLAMA_TCP_BIN=auto
+      - LLAMA_SERVER_HOST=auto
+      - LLAMA_SERVER_PORT=auto
+      - LLAMA_MODEL_PATH=/app/models/ggml-model-q4_0.bin
+    volumes:
+      - ./path/to/7B/:/app/models
