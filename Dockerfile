@@ -21,7 +21,7 @@ RUN pnpm install --frozen-lockfile
 COPY . .
 
 # Build the app
-RUN npm run build
+RUN SKIP_ENV_VALIDATION=true npm run build
 
 ## Builder for llama-cpp
 FROM alpine:3.14 AS llama-cpp-builder
