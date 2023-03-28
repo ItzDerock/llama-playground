@@ -63,7 +63,7 @@ app.register(fastifyTRPCPlugin, {
 });
 
 // pass to next.js if no route is defined
-app.addHook("onRequest", (req, rep, done) => {
+app.addHook("onRequest", async (req, rep, done) => {
   // if a route is defined, skip
   if (req.routerPath) {
     return done();
@@ -75,7 +75,8 @@ app.addHook("onRequest", (req, rep, done) => {
   }
 
   // otherwise, pass to next.js
-  app.nextHandle(req.raw, rep.raw);
+  await app.nextHandle(req.raw, rep.raw);
+  rep.hijack();
 });
 
 // start the server
