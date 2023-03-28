@@ -32,13 +32,15 @@ const client = z.object({
  * You can't destruct `process.env` as a regular object in the Next.js edge runtimes (e.g.
  * middlewares) or client-side so we need to destruct manually.
  *
- * @type {Record<keyof z.infer<typeof server> | keyof z.infer<typeof client>, string | undefined>}
+ * @type {Record<keyof z.infer<typeof server> | keyof z.infer<typeof client>, string | number | undefined>}
  */
 const processEnv = {
   NODE_ENV: process.env.NODE_ENV,
   USE_BUILT_IN_LLAMA_SERVER: process.env.USE_BUILT_IN_LLAMA_SERVER,
   LLAMA_SERVER_HOST: process.env.LLAMA_SERVER_HOST,
-  LLAMA_SERVER_PORT: process.env.LLAMA_SERVER_PORT,
+  LLAMA_SERVER_PORT: isNaN(parseInt(process.env.LLAMA_SERVER_PORT ?? ""))
+    ? process.env.LLAMA_SERVER_PORT
+    : parseInt(process.env.LLAMA_SERVER_PORT ?? ""),
   LLAMA_MODEL_PATH: process.env.LLAMA_MODEL_PATH,
   LLAMA_TCP_BIN: process.env.LLAMA_TCP_BIN,
   PORT: process.env.PORT ?? "3000",
