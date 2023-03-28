@@ -63,10 +63,10 @@ app.register(fastifyTRPCPlugin, {
 });
 
 // pass to next.js if no route is defined
-app.addHook("onRequest", async (req, rep, done) => {
+app.addHook("onRequest", async (req, rep) => {
   // if a route is defined, skip
   if (req.routerPath) {
-    return done();
+    return;
   }
 
   // pass along headers
