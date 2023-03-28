@@ -1,4 +1,5 @@
-import fastify from "fastify";
+import fastify, { FastifyLoggerOptions } from "fastify";
+import { LoggerOptions } from "pino";
 import fastifyNextJS from "./plugins/next";
 import { fastifyTRPCPlugin } from "@trpc/server/adapters/fastify";
 import "dotenv/config";
@@ -9,10 +10,30 @@ import ws from "@fastify/websocket";
 import path from "path";
 import { fastifyStatic } from "@fastify/static";
 
+// logger
+const envToLogger = {
+  development: {
+    transport: {
+      target: "pino-pretty",
+      options: {
+        translateTime: "HH:MM:ss Z",
+        ignore: "pid,hostname",
+      },
+    },
+  },
+  production: true,
+  test: false,
+} satisfies {
+  [key: string]: (FastifyLoggerOptions & LoggerOptions) | boolean;
+};
+
 // create fastify app
 export const app = fastify({
   // prevent errors during large batch requests
   maxParamLength: 5000,
+
+  // logger
+  logger: envToLogger[env.NODE_ENV] ?? true,
 });
 
 // register the next.js plugin
@@ -48,17 +69,13 @@ app.addHook("onRequest", (req, rep, done) => {
     return done();
   }
 
-  // if it's a websocket request, skip
-  if (req.headers.connection === "Upgrade") {
-    return done();
+  // pass along headers
+  for (const [key, value] of Object.entries(rep.getHeaders())) {
+    if (value) rep.raw.setHeader(key, value);
   }
 
-  // if it's requesting a static file, skip
-  if (req.url.startsWith("/public/")) {
-    return done();
-  }
-
-  if (req.url === "/") app.nextHandle(req.raw, rep.raw);
+  // otherwise, pass to next.js
+  app.nextHandle(req.raw, rep.raw);
 });
 
 // start the server
