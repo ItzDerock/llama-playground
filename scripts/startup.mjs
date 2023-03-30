@@ -21,7 +21,11 @@ if (env.LLAMA_TCP_BIN != "auto") {
 }
 
 // check if llama.cpp's tcp_server is already built
-if (fs.existsSync("./bin/") && fs.existsSync("./bin/main")) {
+if (
+  !process.env.FORCE_REBUILD &&
+  fs.existsSync("./bin/") &&
+  fs.existsSync("./bin/main")
+) {
   console.log(chalk.green("✅ Llama.cpp's tcp_server is already built."));
   process.exit(0);
 }
@@ -37,9 +41,9 @@ console.log(
 );
 
 // clone the repo
-await $`git clone --depth 1 --branch tcp_server https://github.com/ggerganov/llama.cpp ${tempDir}`;
+await $`git clone --depth 1 --branch tcp_server https://github.com/tarruda/llama.cpp ${tempDir}`;
 console.log(
-  chalk.gray(`🔃 (2/4) Cloned llama.cpp's tcp_server branch to ${tempDir}`)
+  chalk.gray(`🔃 (2/4) Cloned tarruda/llama.cpp tcp_server to ${tempDir}`)
 );
 
 // build the repo
@@ -47,9 +51,7 @@ console.log(chalk.gray(`🔃 (3/4) Building llama.cpp's tcp_server...`));
 try {
   await $`cd ${tempDir} && make -j`;
 } catch (error) {
-  console.error(
-    chalk.red(`❌ Failed to build llama.cpp's tcp_server! Error: ${error}`)
-  );
+  console.error(chalk.red(`❌ Failed to build tcp_server! Error: ${error}`));
   console.error(`🗑️ Cleaning up...`);
   deleteTempDir();
   process.exit(1);
@@ -57,7 +59,19 @@ try {
 
 // copy the binary to the bin folder
 console.log(chalk.gray(`🔃 (4/4) Copying binary to ./bin/main...`));
-fs.mkdirSync("./bin/");
+try {
+  fs.mkdirSync("./bin/");
+} catch (error) {
+  // @ts-ignore
+  if (error.code !== "EEXIST") {
+    console.error(
+      chalk.red(`❌ Failed to create ./bin/ folder! Error: ${error}`)
+    );
+    console.error(`🗑️ Cleaning up...`);
+    deleteTempDir();
+    process.exit(1);
+  }
+}
 fs.copyFileSync(path.join(tempDir, "main"), "./bin/main");
 
 // done
